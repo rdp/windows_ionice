@@ -1,0 +1,3 @@
+I want [need]/ to detect contention
+
+Then either throw up more processes, or periodically allthread freeze the hog? (the command line param?)
