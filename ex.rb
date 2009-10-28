@@ -7,7 +7,7 @@ require 'ruby-wmi'
 #puts all.map &:PercentProcessorTime # will be the real values
 require 'benchmark'
 # this is snapshot of raw data per process
-# including 
+# including
 WMI::Win32_PerfRawData_PerfProc_Process.find(:all)[0].PercentProcessorTime
 # and also the PID
 
@@ -22,31 +22,38 @@ end
 # anticipate {123 => 456}
 
 def diff_values first, second, time_diff
-  puts time_diff, 'was time diff'
   answer = {}
   for key in first.keys
     if first[key] != second[key]
-      answer[key] = (first[key] - second[key]).to_f/time_diff*100
+      begin
+        answer[key] = (first[key] - second[key]).to_f/time_diff*100
+      rescue
+        # sometimes the values are nil
+        # ignore I suppose
+      end
     end
   end
   answer
 end
 
-old = {}
+loop {
+  puts '.'
+  old = {}
 
-ts1 = fill old
-sleep 0.1
-new = {}
-ts2 = fill new
+  ts1 = fill old
+  sleep 3
+  new = {}
+  ts2 = fill new
 
-sorted = diff_values( new, old, ts2 - ts1 )
-puts sorted.inspect
-violated = []
-sorted.each{|pid, percentage|
- if percentage == 100 # using a full core
-   violated << pid
-   proc =WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
-   proc.SetPriority 64 # low priority
- end
+  sorted = diff_values( new, old, ts2 - ts1 )
+  #  puts sorted.inspect
+  violated = []
+  sorted.each{|pid, percentage|
+    if percentage == 100 # using a full core
+      violated << pid
+      proc =WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
+      proc.SetPriority 64 # low priority
+      puts "violated!" + pid
+    end
+  }
 }
-puts violated.inspect
