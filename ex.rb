@@ -46,14 +46,16 @@ loop {
   ts2 = fill new
 
   sorted = diff_values( new, old, ts2 - ts1 )
-  #  puts sorted.inspect
+  puts sorted.inspect if $VERBOSE
   violated = []
   sorted.each{|pid, percentage|
-    if percentage == 100 # using a full core
+    if percentage >= 98 && pid != 0 # using a full core (100) or more...
       violated << pid
       proc =WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
-      proc.SetPriority 64 # low priority
-      puts "violated!" + pid
+      if proc.Priority > 4 # appears that 7 or 8 here mean normal prio...
+        proc.SetPriority 64 # set it to low priority
+        puts "violated!", pid
+      end
     end
   }
 }
