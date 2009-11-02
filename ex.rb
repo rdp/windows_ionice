@@ -37,7 +37,8 @@ def diff_values first, second, time_diff
 end
 
 loop {
-  puts '.'
+  print '.' if $VERBOSE
+  STDOUT.flush
   old = {}
 
   ts1 = fill old
