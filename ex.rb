@@ -14,9 +14,9 @@ WMI::Win32_PerfRawData_PerfProc_Process.find(:all)[0].PercentProcessorTime
 
 def fill into_this
   all = WMI::Win32_PerfRawData_PerfProc_Process.find(:all).each{|proc|
-    into_this[proc.IDProcess] = proc.PercentProcessorTime.to_i
+    into_this[proc.IDProcess] = [proc.PercentProcessorTime.to_i, proc.IODataBytesPerSec.to_i]
   }
-  all[0].TimeStamp_Sys100NS.to_i # these are all the same
+  return all[0].TimeStamp_Sys100NS.to_i # these are all the same
 end
 
 # anticipate {123 => 456}
@@ -24,9 +24,9 @@ end
 def diff_values first, second, time_diff
   answer = {}
   for key in first.keys
-    if first[key] != second[key]
+    if first[key] != second[key] # sometimes they stay the same
       begin
-        answer[key] = (first[key] - second[key]).to_f/time_diff*100
+        answer[key] = (first[key][0] - second[key][0]).to_f/time_diff*100
       rescue
         # sometimes the values are nil
         # ignore I suppose
@@ -52,7 +52,7 @@ loop {
   sorted.each{|pid, percentage|
     if percentage >= 98 && pid != 0 # using a full core (100) or more...
       violated << pid
-      proc =WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
+      proc = WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
       if proc.Priority > 4 # appears that 7 or 8 here mean normal prio...
         proc.SetPriority 64 # set it to low priority
         puts "violated!", pid
