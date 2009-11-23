@@ -1,17 +1,11 @@
 require 'frubygems' if $0 == __FILE__ && RUBY_VERSION < '1.9'
 require 'sane'
 require 'ruby-wmi'
-#all = WMI::Win32_PerfFormattedData_PerfProc_Process.find(:all)
-#all.map &:Refresh_
-#all.map &:Refresh_ # for some reason have to run it twice
-#puts all.map &:PercentProcessorTime # will be the real values
 require 'benchmark'
-# this is snapshot of raw data per process
-# including
-WMI::Win32_PerfRawData_PerfProc_Process.find(:all)[0].PercentProcessorTime
-# and also the PID
 
 
+# take a snapshot of the processes' status
+# could be more efficient by selecting just what we wanted, I suppose
 def fill into_this
   all = WMI::Win32_PerfRawData_PerfProc_Process.find(:all).each{|proc|
     into_this[proc.IDProcess] = {:processor => proc.PercentProcessorTime.to_i, :data => proc.IODataBytesPerSec.to_i}
@@ -19,8 +13,9 @@ def fill into_this
   return all[0].TimeStamp_Sys100NS.to_i # these are all the same
 end
 
-# anticipate {123 => 456}
-
+#
+# compare two snapshots
+#
 def diff_values first, second, time_diff, what_to_calculate
   answer = {}
   for key in first.keys
@@ -70,7 +65,7 @@ loop {
         proc = WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
         if proc.Priority > 4 # appears that 7 or 8 here mean normal prio...
           proc.SetPriority 64 # set it to low priority
-          puts "violated!", pid, value, reading
+          puts "violated!", pid, value, reading, "was greater than", max
         end
       end
     }
