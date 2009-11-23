@@ -1,4 +1,4 @@
-require 'frubygems'
+require 'frubygems' if $0 == __FILE__ && RUBY_VERSION < '1.9'
 require 'sane'
 require 'ruby-wmi'
 #all = WMI::Win32_PerfFormattedData_PerfProc_Process.find(:all)
@@ -48,7 +48,7 @@ loop {
   old = {}
 
   ts1 = fill old
-  $VERBOSE ? sleep( 1 ) : sleep ( 3 )
+  $VERBOSE ? sleep( 1 ) : sleep( 3 )
   new = {}
   ts2 = fill new
 
