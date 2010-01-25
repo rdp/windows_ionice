@@ -42,13 +42,16 @@ def diff_values first, second, time_diff, what_to_calculate
   answer
 end
 
+NORMAL_PRIO=32
+IDLE_PRIO=64
+
 loop {
   print '.' if $VERBOSE
   STDOUT.flush
   old = {}
 
   ts1 = fill old
-  $VERBOSE ? sleep( 1 ) : sleep ( 3 )
+  $VERBOSE ? sleep( 1 ) : sleep( 3 )
   new = {}
   ts2 = fill new
 
@@ -69,8 +72,9 @@ loop {
         violated << pid
         proc = WMI::Win32_Process.find(:first,  :conditions => {:ProcessId => pid.to_i})
         if proc.Priority > 4 # appears that 7 or 8 here mean normal prio...
-          proc.SetPriority 64 # set it to low priority
+          proc.SetPriority IDLE_PRIO # set it to low priority
           puts "violated!", pid, value, reading
+          Thread.new { sleep 5; proc.setPriority NORMAL_PRIO; puts "set it back to normal", pid }
         end
       end
     }
