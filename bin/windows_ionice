@@ -1,8 +1,11 @@
+if RUBY_VERSION > '1.8'
+ raise '1.9 not yet supported'
+end
+
 require 'frubygems' if $0 == __FILE__ && RUBY_VERSION < '1.9'
 require 'sane'
 require 'ruby-wmi'
 require 'benchmark'
-
 
 # take a snapshot of the processes' status
 # could be more efficient by selecting just what we wanted, I suppose
